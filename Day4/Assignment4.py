@@ -1,0 +1,1 @@
+#manuDriven calculator using functions of addition, subtraction, multiplication and division
