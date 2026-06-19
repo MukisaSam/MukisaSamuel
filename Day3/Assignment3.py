@@ -32,7 +32,6 @@ weights = {
     "Players in EPL": 1, "Players in La Liga": 0.5, "Players in Serie A": 0.5,
     "Players in Bundesliga": 0.5, "Players in Ligue 1": 0.5,
     "Players in other leagues": 0.1,
-    "GOAT effect": 3,
 }
 
 def load_teams(filename):
