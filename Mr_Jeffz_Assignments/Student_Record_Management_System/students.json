@@ -1,0 +1,22 @@
+{
+    "BIT/2025/001": {
+        "address": "Kisaasi, Kampala",
+        "contact": "+256701234567",
+        "program": "Bachelor of Information Technology"
+    },
+    "BCS/2025/014": {
+        "address": "Ntinda, Kampala",
+        "contact": "+256752345678",
+        "program": "Bachelor of Computer Science"
+    },
+    "BBA/2024/087": {
+        "address": "Mukono Central, Mukono",
+        "contact": "+256773456789",
+        "program": "Bachelor of Business Administration"
+    },
+    "DIT/2025/032": {
+        "address": "Entebbe, Wakiso",
+        "contact": "+256784567890",
+        "program": "Diploma in Information Technology"
+    }
+}
