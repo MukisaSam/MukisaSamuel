@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo Register</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        h2 { margin-bottom: 20px; color: #333; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .helptext { display: block; font-size: 11px; color: #777; margin-top: 4px; }
+        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 10px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background: #218838; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Create Account</h2>
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text|safe }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn">Sign Up</button>
+    </form>
+</div>
+
+</body>
+</html>
