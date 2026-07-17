@@ -1,0 +1,77 @@
+/*
+  style.css
+  ---------
+  Plain CSS to make the demo page look presentable.
+  Served by FastAPI from the /static folder (see main.py).
+*/
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    background: #0f172a;
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    padding: 32px;
+    width: 100%;
+    max-width: 640px;
+}
+
+h1 { font-size: 1.6rem; }
+
+.subtitle {
+    color: #64748b;
+    margin: 4px 0 20px;
+    font-size: 0.95rem;
+}
+
+code {
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+thead th {
+    background: #6366f1;
+    color: #ffffff;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+thead th:first-child { border-top-left-radius: 8px; }
+thead th:last-child  { border-top-right-radius: 8px; }
+
+tbody tr:hover { background: #f1f5f9; }
+
+.hint {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.hint a { color: #6366f1; font-weight: 600; text-decoration: none; }
+.hint a:hover { text-decoration: underline; }

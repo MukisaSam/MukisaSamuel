@@ -1,0 +1,18 @@
+# Install everything with:  pip install -r requirements.txt
+
+# --- Core framework ---
+fastapi                 # the web framework
+uvicorn[standard]       # the ASGI server that runs the app
+
+# --- Data & database ---
+sqlalchemy              # ORM: Python classes <-> database tables
+alembic                 # database migrations (schema version control)
+pydantic-settings       # load settings from environment / .env
+email-validator         # enables Pydantic's EmailStr type
+
+# --- Templates ---
+jinja2                  # render the HTML page
+
+# --- Testing ---
+pytest                  # test runner
+httpx                   # HTTP client used by FastAPI's TestClient

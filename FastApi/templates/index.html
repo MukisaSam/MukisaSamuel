@@ -1,0 +1,49 @@
+<!--
+  index.html
+  ----------
+  The single page shown in the browser. main.py fills in the
+  double-curly-brace placeholders (see below) with real data
+  (students + summary) before sending the finished HTML to the
+  browser. That filling-in is Jinja2 templating.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Information</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="card">
+        <h1>🎓 Student Information</h1>
+        <p class="subtitle">A FastAPI demo &mdash; {{ summary.total_students }} students registered</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Reg Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.reg_number }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="hint">
+            Explore the auto-generated, interactive API docs at
+            <a href="/docs">/docs</a> &mdash; FastAPI builds them for you.
+        </p>
+    </div>
+</body>
+</html>

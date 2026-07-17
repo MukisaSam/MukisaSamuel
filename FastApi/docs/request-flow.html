@@ -1,0 +1,384 @@
+<title>FastAPI Request Lifecycle</title>
+<style>
+  :root {
+    --bg: #f4f7f7;
+    --surface: #ffffff;
+    --surface-2: #eef2f2;
+    --border: #d7e0e0;
+    --text: #16242a;
+    --muted: #5c6d74;
+    --accent: #0d9488;        /* request path (down) */
+    --accent-soft: #0d94881a;
+    --accent-line: #0d9488;
+    --resp: #b45613;          /* response path (up) */
+    --resp-soft: #b456131a;
+    --mono: #0f766e;
+    --shadow: 0 1px 2px rgba(16,36,42,.06), 0 8px 24px rgba(16,36,42,.06);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1316;
+      --surface: #121e23;
+      --surface-2: #17252b;
+      --border: #24363d;
+      --text: #e7eef0;
+      --muted: #93a5ac;
+      --accent: #2dd4bf;
+      --accent-soft: #2dd4bf1f;
+      --accent-line: #2dd4bf;
+      --resp: #f0a35a;
+      --resp-soft: #f0a35a1f;
+      --mono: #5eead4;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f7f7; --surface: #ffffff; --surface-2: #eef2f2; --border: #d7e0e0;
+    --text: #16242a; --muted: #5c6d74; --accent: #0d9488; --accent-soft: #0d94881a;
+    --accent-line: #0d9488; --resp: #b45613; --resp-soft: #b456131a; --mono: #0f766e;
+    --shadow: 0 1px 2px rgba(16,36,42,.06), 0 8px 24px rgba(16,36,42,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c1316; --surface: #121e23; --surface-2: #17252b; --border: #24363d;
+    --text: #e7eef0; --muted: #93a5ac; --accent: #2dd4bf; --accent-soft: #2dd4bf1f;
+    --accent-line: #2dd4bf; --resp: #f0a35a; --resp-soft: #f0a35a1f; --mono: #5eead4;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 56px 24px 72px;
+  }
+
+  /* ---------- header ---------- */
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 60ch;
+    margin: 0 0 22px;
+  }
+  .example {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-size: .92rem;
+  }
+  .example .verb {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .example .path { color: var(--text); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 26px 0 6px;
+    font-size: .84rem;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.req { background: var(--accent); }
+  .dot.res { background: var(--resp); }
+
+  /* ---------- pipeline ---------- */
+  .pipeline { margin-top: 30px; }
+  .stage {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 20px;
+  }
+  .rail {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  /* the continuous spine */
+  .rail::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(var(--accent-line), var(--accent-line));
+    opacity: .35;
+  }
+  .stage:first-child .rail::before { top: 22px; }
+  .num {
+    position: relative;
+    z-index: 1;
+    margin-top: 14px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    font-size: .9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 8px 0 18px;
+    box-shadow: var(--shadow);
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .card h3 {
+    margin: 0 0 3px;
+    font-size: 1.06rem;
+    letter-spacing: -.01em;
+  }
+  .role {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .file {
+    display: inline-block;
+    margin: 9px 0;
+    padding: 3px 9px;
+    background: var(--accent-soft);
+    color: var(--mono);
+    border-radius: 7px;
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-size: .82rem;
+    word-break: break-all;
+  }
+  .file.plain {
+    background: var(--surface-2);
+    color: var(--muted);
+    font-style: normal;
+  }
+  .card p { margin: 6px 0 0; color: var(--muted); font-size: .95rem; }
+  .card p code {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-size: .85em;
+    color: var(--text);
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 5px;
+  }
+
+  /* ---------- response strip ---------- */
+  .response {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--resp);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+  }
+  .response .eyebrow { color: var(--resp); margin-bottom: 14px; }
+  .steps {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: start;
+    font-size: .95rem;
+    color: var(--muted);
+  }
+  .steps li .arrow {
+    color: var(--resp);
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .steps li b { color: var(--text); font-weight: 600; }
+  .steps .mono {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-size: .84em;
+    color: var(--resp);
+    background: var(--resp-soft);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  .footnote {
+    margin-top: 34px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .88rem;
+  }
+  .footnote b { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+    .card:hover { transform: none; }
+  }
+  @media (max-width: 520px) {
+    .stage { grid-template-columns: 40px 1fr; column-gap: 12px; }
+    .num { width: 30px; height: 30px; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">FastAPI · Request Lifecycle</p>
+    <h1>How one request travels through the app</h1>
+    <p class="lede">
+      Follow a single request from the browser all the way to the database and
+      back. Each stop is a real folder in the project — the same
+      separation-of-concerns you see in the file tree, now in motion.
+    </p>
+    <div class="example">
+      <span class="verb">GET</span>
+      <span class="path">/api/v1/students/</span>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot req"></i> Request travelling in (down)</span>
+      <span><i class="dot res"></i> Response travelling back (up)</span>
+    </div>
+  </header>
+
+  <section class="pipeline" aria-label="Request path">
+
+    <div class="stage">
+      <div class="rail"><div class="num">1</div></div>
+      <div class="card">
+        <span class="role">Client</span>
+        <h3>Browser or API tool</h3>
+        <span class="file plain">the outside world</span>
+        <p>Someone opens the page or calls the API. The HTTP request leaves the client and travels across the network to your server.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">2</div></div>
+      <div class="card">
+        <span class="role">Web server · the waiter</span>
+        <h3>Uvicorn</h3>
+        <span class="file plain">uvicorn app.main:app</span>
+        <p>Listens on the port, receives the raw HTTP request, and hands it to your app through the ASGI interface. Nothing reaches FastAPI without going through it.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">3</div></div>
+      <div class="card">
+        <span class="role">App &amp; routing</span>
+        <h3>FastAPI matches the URL</h3>
+        <span class="file">app/main.py → app/api/v1/router.py</span>
+        <p>FastAPI looks at the method + path (<code>GET /api/v1/students/</code>) and finds the one endpoint function registered for it.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">4</div></div>
+      <div class="card">
+        <span class="role">Endpoint</span>
+        <h3>The route function runs</h3>
+        <span class="file">app/api/v1/endpoints/students.py</span>
+        <p><code>list_students()</code> is called. It asks for a database session via <code>Depends(get_db)</code>, so FastAPI resolves that dependency first.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">5</div></div>
+      <div class="card">
+        <span class="role">Dependency</span>
+        <h3>Open a database session</h3>
+        <span class="file">app/api/deps.py</span>
+        <p><code>get_db()</code> opens a Session, lends it to the endpoint, and guarantees it is closed again when the request finishes.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">6</div></div>
+      <div class="card">
+        <span class="role">CRUD · the queries</span>
+        <h3>Build the query in Python</h3>
+        <span class="file">app/crud/student.py</span>
+        <p><code>crud.student.get_multi(db)</code> describes what to fetch — in Python. No SQL is written by hand here.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">7</div></div>
+      <div class="card">
+        <span class="role">ORM &amp; model</span>
+        <h3>SQLAlchemy writes the SQL</h3>
+        <span class="file">app/models/student.py</span>
+        <p>Using the <code>Student</code> table definition, SQLAlchemy translates the Python query into real SQL — the ORM doing its job.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="rail"><div class="num">8</div></div>
+      <div class="card">
+        <span class="role">Database</span>
+        <h3>SQLite runs the query</h3>
+        <span class="file">students.db</span>
+        <p>The database executes the SQL and returns the matching rows. This is the turning point — the request has arrived; now the answer heads back.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="response" aria-label="Response path">
+    <p class="eyebrow">↑ The response journey back</p>
+    <ul class="steps">
+      <li><span class="arrow">↑</span><span>SQLAlchemy turns the raw rows into <b>Student objects</b> your Python code can use.</span></li>
+      <li><span class="arrow">↑</span><span><b>Pydantic shapes the JSON</b> — <span class="mono">app/schemas/student.py</span> · <span class="mono">StudentRead</span> validates the data and keeps only the public fields.</span></li>
+      <li><span class="arrow">↑</span><span><b>FastAPI serialises</b> those objects to JSON, and <b>Uvicorn sends</b> the HTTP response back out.</span></li>
+      <li><span class="arrow">↑</span><span>The <b>client receives the JSON</b> — or, for <span class="mono">GET /</span>, the HTML page renders the students in a table.</span></li>
+    </ul>
+  </section>
+
+  <p class="footnote">
+    <b>The one idea to leave them with:</b> every layer has a single job, and the
+    request passes through them in order — routing, validation, queries, the ORM,
+    the database — then the answer retraces its steps home. That is why the code
+    is split into folders instead of one big file.
+  </p>
+</div>

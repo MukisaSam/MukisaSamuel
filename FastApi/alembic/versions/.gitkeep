@@ -1,0 +1,3 @@
+# Alembic writes generated migration files here.
+# Generate one with:  alembic revision --autogenerate -m "create students table"
+# Apply it with:      alembic upgrade head
